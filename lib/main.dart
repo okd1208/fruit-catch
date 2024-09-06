@@ -26,9 +26,13 @@ class FruitCatchGame extends StatefulWidget {
 
 class _FruitCatchGameState extends State<FruitCatchGame> {
   int score = 0;
-  List<Map<String, dynamic>> fruits = []; // 果物の位置とサイズを含むリスト
+  List<Map<String, dynamic>> fruits = []; // 果物の位置とプロパティを含むリスト
   bool gameStarted = false; // ゲームが開始されたかどうかを示すフラグ
   bool gameOver = false; // ゲームオーバーかどうか
+  double gravity = 9.8; // 重力加速度
+  double maxSpeed = 30.0; // 加速の最大値
+  double elapsedTime = 0.05; // 初期の経過時間（秒）
+  double maxElapsedTime = 0.2; // 経過時間の最大値
   Timer? gameTimer; // ゲームのタイマー
 
   // ゲームを開始する
@@ -36,11 +40,41 @@ class _FruitCatchGameState extends State<FruitCatchGame> {
     setState(() {
       gameStarted = true;
       gameOver = false; // ゲームオーバーのフラグをリセット
+      elapsedTime = 0.05; // 初期化
     });
 
     // 1秒ごとに果物を追加
     gameTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       addFruit();
+    });
+
+    // 50msごとに果物を下に移動させるタイマーを1つだけ作成
+    Timer.periodic(Duration(milliseconds: 50), (timer) {
+      setState(() {
+        // 経過時間を増やすが、最大値を超えないように制限
+        if (elapsedTime < maxElapsedTime) {
+          elapsedTime += 0.001; // 徐々に経過時間を増加
+        }
+
+        for (var fruit in fruits) {
+          double mass = fruit['mass']; // 果物の質量
+
+          // 速度を加速させるが、最大速度に制限
+          fruit['velocity'] += gravity * mass * elapsedTime;
+          if (fruit['velocity'] > maxSpeed) {
+            fruit['velocity'] = maxSpeed; // 最大速度を超えないように制限
+          }
+
+          fruit['y'] += fruit['velocity']; // 現在の速度に基づいて位置を更新
+
+          // 果物が画面の下に到達した場合にゲームオーバー処理
+          if (fruit['y'] > MediaQuery.of(context).size.height && !gameOver) {
+            timer.cancel();
+            handleGameOver();
+            break; // 1つの果物でゲームオーバーになったらループを終了
+          }
+        }
+      });
     });
   }
 
@@ -51,25 +85,12 @@ class _FruitCatchGameState extends State<FruitCatchGame> {
 
     setState(() {
       fruits.add({
+        'type': 'apple', // 果物の種類
         'x': startPositionX,
         'y': 0.0, // 果物は上から落ちる
-        'size': fruitSize
-      });
-    });
-
-    // 果物を下に落とすアニメーション
-    Timer.periodic(Duration(milliseconds: 50), (timer) {
-      setState(() {
-        for (var fruit in fruits) {
-          fruit['y'] += 5; // 果物を下に移動させる
-
-          // 果物が画面の下に到達した場合にゲームオーバー処理
-          if (fruit['y'] > MediaQuery.of(context).size.height && !gameOver) {
-            timer.cancel();
-            handleGameOver();
-            break; // 1つの果物でゲームオーバーになったらループを終了
-          }
-        }
+        'size': fruitSize,
+        'mass': 1.0, // りんごの質量 (適宜調整可能)
+        'velocity': 5.0, // 初期速度
       });
     });
   }
@@ -111,6 +132,7 @@ class _FruitCatchGameState extends State<FruitCatchGame> {
   // タップされたかどうかを確認する
   void checkTap(TapDownDetails details) {
     double tapX = details.globalPosition.dx;
+
     double tapY = details.globalPosition.dy;
 
     setState(() {
