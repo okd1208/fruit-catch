@@ -3,6 +3,7 @@ import '../models/fruit.dart';  // データモデルをインポート
 import '../widgets/fruit_widget.dart';  // ウィジェットをインポート
 import '../utils/game_utils.dart';  // ユーティリティ関数をインポート
 import 'dart:async';
+import 'dart:math';
 
 class FruitCatchGame extends StatefulWidget {
   @override
@@ -58,7 +59,7 @@ class _FruitCatchGameState extends State<FruitCatchGame> {
 
   // 果物を追加する
   void addFruit() {
-    double startX = MediaQuery.of(context).size.width * (0.1 + 0.8 * (fruits.length % 10) / 10);  // 画面上にランダムに追加
+    double startX = Random().nextDouble() * (MediaQuery.of(context).size.width - 25);  // 画面上にランダムに追加
     fruits.add(Fruit(
       type: 'apple',
       x: startX,
@@ -67,6 +68,14 @@ class _FruitCatchGameState extends State<FruitCatchGame> {
       mass: 1.0,
       velocity: 5.0,
     ));
+  }
+
+  // フルーツがタップされたときにスコアを増加して削除
+  void onFruitTapped(Fruit tappedFruit) {
+    setState(() {
+      fruits.remove(tappedFruit);
+      score += 1;
+    });
   }
 
   // ゲームオーバー処理
@@ -102,8 +111,8 @@ class _FruitCatchGameState extends State<FruitCatchGame> {
       ),
       body: Stack(
         children: [
-          // 果物を表示
-          ...fruits.map((fruit) => FruitWidget(fruit: fruit)),
+          // 果物を表示（タップ可能にする）
+          ...fruits.map((fruit) => FruitWidget(fruit: fruit, onTap: () => onFruitTapped(fruit))),
           // スコア表示
           Positioned(
             top: 20,
