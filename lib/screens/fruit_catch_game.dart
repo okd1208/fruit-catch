@@ -16,8 +16,8 @@ class _FruitCatchGameState extends State<FruitCatchGame> {
   bool gameStarted = false;
   bool gameOver = false;
   double elapsedTime = 0.05;
-  double gravity = 9.8;
-  double maxSpeed = 30.0;
+  double gravity = 9.8 / 9;
+  double maxSpeed = 10.0;
   Timer? gameTimer;
 
   // ゲームを開始するメソッド
