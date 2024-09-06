@@ -31,8 +31,10 @@ class _FruitCatchGameState extends State<FruitCatchGame> {
     });
 
     // 1秒ごとに果物を追加
-    gameTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      addFruit();
+    gameTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+      if (fiftyFifty()) {
+        addFruit();
+      }
     });
 
     // 50msごとに果物を落下させるタイマー
